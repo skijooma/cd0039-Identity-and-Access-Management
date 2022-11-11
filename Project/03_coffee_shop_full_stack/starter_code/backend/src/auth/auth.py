@@ -1,6 +1,9 @@
+import json
 from functools import wraps
+from urllib.request import urlopen
 
 from flask import abort, request
+from jose import jwt
 
 AUTH0_DOMAIN = 'dev-4ezltnbcex7uvmp5.us.auth0.com'
 ALGORITHMS = ['RS256']
@@ -54,8 +57,7 @@ def get_token_auth_header():
     # Checking if header is missing a part.
     elif len(parts) == 1:
         raise AuthError({
-            'code': 'Invalid header',
-            'description': 'Header incomplete.'
+            'code': 'Invalid header', 'description': 'Header incomplete.'
         }, 401)
 
     # Checking if header has excess parts.
@@ -84,7 +86,20 @@ def get_token_auth_header():
 
 
 def check_permissions(permission, payload):
-    raise Exception('Not Implemented')
+
+    if 'permissions' not in payload:
+        raise AuthError({
+            'code': 'invalid_claims',
+            'description': 'Permissions not included in JWT.'
+        }, 400)
+
+    if permission not in payload['permissions']:
+        raise AuthError({
+            'code': 'unauthorized',
+            'description': 'Permission not found.'
+        }, 403)
+
+    return True
 
 
 '''
@@ -103,7 +118,53 @@ def check_permissions(permission, payload):
 
 
 def verify_decode_jwt(token):
-    raise Exception('Not Implemented')
+    jsonurl = urlopen(f'https://{AUTH0_DOMAIN}/.well-known/jwks.json')
+    jwks = json.loads(jsonurl.read())
+    unverified_header = jwt.get_unverified_header(token)
+    rsa_key = {}
+
+    if 'kid' not in unverified_header:
+        raise AuthError({
+            'code': 'invalid_header', 'description': 'Authorization malformed.'
+        }, 401)
+
+    for key in jwks['keys']:
+        if key['kid'] == unverified_header['kid']:
+            rsa_key = {
+                'kty': key['kty'], 'kid': key['kid'], 'use': key['use'],
+                'n': key['n'], 'e': key['e']
+            }
+
+    if rsa_key:
+        try:
+            payload = jwt.decode(token, rsa_key, algorithms=ALGORITHMS,
+                                 audience=API_AUDIENCE,
+                                 issuer='https://' + AUTH0_DOMAIN + '/')
+
+            return payload
+
+        except jwt.ExpiredSignatureError:
+            raise AuthError({
+                'code': 'token_expired', 'description': 'Token expired.'
+            }, 401)
+
+        except jwt.JWTClaimsError:
+            raise AuthError({
+                'code': 'invalid_claims',
+                'description': 'Incorrect claims. Please, check the audience '
+                               'and issuer. '
+            }, 401)
+
+        except Exception:
+            raise AuthError({
+                'code': 'invalid_header',
+                'description': 'Unable to parse authentication token.'
+            }, 400)
+
+    raise AuthError({
+        'code': 'invalid_header',
+        'description': 'Unable to find the appropriate key.'
+    }, 400)
 
 
 '''
@@ -123,10 +184,25 @@ def requires_auth(permission=''):
         @wraps(f)
         def wrapper(*args, **kwargs):
             token = get_token_auth_header()
-            payload = verify_decode_jwt(token)
-            check_permissions(permission, payload)
+            try:
+                payload = verify_decode_jwt(token)
+                check_permissions(permission, payload)
+            except:
+                abort(401)
+
             return f(payload, *args, **kwargs)
 
         return wrapper
 
     return requires_auth_decorator
+
+
+
+
+# https://dev-4ezltnbcex7uvmp5.us.auth0.com/authorize?
+# audience=ffsnd&
+# response_type=token&
+# client_id=V2cmp8AICx4yXN3pfTNnT3prnjhWWx89&
+# redirect_uri=https://localhost:8080/callback
+
+# eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IlNyN2hvNVA2Qi13UE85ajZRVEo2TiJ9.eyJpc3MiOiJodHRwczovL2Rldi00ZXpsdG5iY2V4N3V2bXA1LnVzLmF1dGgwLmNvbS8iLCJzdWIiOiJhdXRoMHw2MzY5ODAxZWNmOTFkMmE3NmU5NDM3ODIiLCJhdWQiOiJmZnNuZCIsImlhdCI6MTY2ODE5MjA3MCwiZXhwIjoxNjY4MTk5MjcwLCJhenAiOiJWMmNtcDhBSUN4NHlYTjNwZlROblQzcHJuamhXV3g4OSIsInNjb3BlIjoiIiwicGVybWlzc2lvbnMiOlsiZGVsZXRlOmRyaW5rcyIsImdldDpkcmlua3MiLCJnZXQ6ZHJpbmtzLWRldGFpbCIsInBhdGNoOmRyaW5rcyIsInBvc3Q6ZHJpbmtzIl19.DQN212NOL5yuu6_LnpnhB4lwLk-HwB0dSPU1r3SzVoRjwWAGlWGEo7eWAqfv8Z9FHe4U0GDIFmcpFUBDaQtv4IS7eMgt0BfQ0jJZJqUXTztF0e_KDooUvUXldUe3L0EX31fcU4saCrLkxJ566kxd0KmhMA-nwMkBwwFUQqLsLqrHp0czYkuir68uJWb7AMgZsgLOqj2o90iX_3UDk2YlnLHB34K9PviYvjKxIitnobkcY3Ju6QEJx6Lmu2lhn9PemPqNNx_pHQH2ObDs7U34ROXYU_s5h0D7IFWiF25YcxNAVg9sknyLKYtUaVF_tVz7RS7pclbimIeLrwYNMHdQ5w
