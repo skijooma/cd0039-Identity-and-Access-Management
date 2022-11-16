@@ -5,7 +5,8 @@ import json
 
 database_filename = "database.db"
 project_dir = os.path.dirname(os.path.abspath(__file__))
-database_path = "sqlite:///{}".format(os.path.join(project_dir, database_filename))
+database_path = "sqlite:///{}".format(
+    os.path.join(project_dir, database_filename))
 
 db = SQLAlchemy()
 
@@ -34,13 +35,16 @@ def db_drop_and_create_all():
     db.drop_all()
     db.create_all()
     # add one demo row which is helping in POSTMAN test
-    drink = Drink(
-        title='water',
-        recipe='[{"name": "water", "color": "blue", "parts": 1}]'
-    )
+    drink = Drink(title='water',
+        recipe='[{"name": "water", "color": "blue", "parts": 1}]')
 
+    drink_2 = Drink(title='latte',
+        recipe='[{"name": "latte", "color": "brown", "parts": 1}]')
 
     drink.insert()
+    drink_2.insert()
+
+
 # ROUTES
 
 '''
@@ -65,11 +69,10 @@ class Drink(db.Model):
 
     def short(self):
         print(json.loads(self.recipe))
-        short_recipe = [{'color': r['color'], 'parts': r['parts']} for r in json.loads(self.recipe)]
+        short_recipe = [{'color': r['color'], 'parts': r['parts']} for r in
+                        json.loads(self.recipe)]
         return {
-            'id': self.id,
-            'title': self.title,
-            'recipe': short_recipe
+            'id': self.id, 'title': self.title, 'recipe': short_recipe
         }
 
     '''
@@ -79,8 +82,7 @@ class Drink(db.Model):
 
     def long(self):
         return {
-            'id': self.id,
-            'title': self.title,
+            'id': self.id, 'title': self.title,
             'recipe': json.loads(self.recipe)
         }
 
