@@ -1,9 +1,9 @@
 import json
 from functools import wraps
+from jose import jwt
 from urllib.request import urlopen
 
 from flask import abort, request
-from jose import jwt
 
 AUTH0_DOMAIN = 'dev-4ezltnbcex7uvmp5.us.auth0.com'
 ALGORITHMS = ['RS256']
@@ -40,10 +40,14 @@ def get_token_auth_header():
     """
 
     # Checking if authorization header is not present in the request.
-    if 'Authorization' not in request.headers:
-        raise AuthError("Authorization missing", 401)
 
-    auth_header = request.headers['Authorization']
+    if 'Authorization' not in request.headers:
+        raise AuthError({
+            "code": "authorization_header_missing",
+            "description": "Authorization header is expected"
+        }, 401)
+
+    auth_header = request.headers.get("Authorization", None)
 
     parts = auth_header.split()
 
@@ -68,6 +72,7 @@ def get_token_auth_header():
         }, 401)
 
     token = parts[1]
+    print("TOKEN ***** ", token)
 
     return token
 
@@ -86,7 +91,6 @@ def get_token_auth_header():
 
 
 def check_permissions(permission, payload):
-
     if 'permissions' not in payload:
         raise AuthError({
             'code': 'invalid_claims',
@@ -95,8 +99,7 @@ def check_permissions(permission, payload):
 
     if permission not in payload['permissions']:
         raise AuthError({
-            'code': 'unauthorized',
-            'description': 'Permission not found.'
+            'code': 'unauthorized', 'description': 'Permission not found.'
         }, 403)
 
     return True
@@ -119,9 +122,12 @@ def check_permissions(permission, payload):
 
 def verify_decode_jwt(token):
     jsonurl = urlopen(f'https://{AUTH0_DOMAIN}/.well-known/jwks.json')
+    # print("JSONURL ***** ", jsonurl)
     jwks = json.loads(jsonurl.read())
+    # print("JWKS ***** ", jwks)
     unverified_header = jwt.get_unverified_header(token)
     rsa_key = {}
+    # print("UNVERIFIED_HEADER ***** ", unverified_header)
 
     if 'kid' not in unverified_header:
         raise AuthError({
@@ -129,6 +135,7 @@ def verify_decode_jwt(token):
         }, 401)
 
     for key in jwks['keys']:
+        # print("***** key['kid'] ***** ", key['kid'])
         if key['kid'] == unverified_header['kid']:
             rsa_key = {
                 'kty': key['kty'], 'kid': key['kid'], 'use': key['use'],
@@ -136,10 +143,13 @@ def verify_decode_jwt(token):
             }
 
     if rsa_key:
+        # print("***** IN ***** ", rsa_key)
         try:
             payload = jwt.decode(token, rsa_key, algorithms=ALGORITHMS,
                                  audience=API_AUDIENCE,
                                  issuer='https://' + AUTH0_DOMAIN + '/')
+
+            # print("PAYLOAD ***** ", payload)
 
             return payload
 
@@ -180,12 +190,14 @@ def verify_decode_jwt(token):
 
 
 def requires_auth(permission=''):
+    print("INSIDE ^^^^^^^^")
     def requires_auth_decorator(f):
         @wraps(f)
         def wrapper(*args, **kwargs):
             token = get_token_auth_header()
             try:
                 payload = verify_decode_jwt(token)
+                print("PAYLOAD >>>>> ", payload)
                 check_permissions(permission, payload)
             except:
                 abort(401)
@@ -196,13 +208,10 @@ def requires_auth(permission=''):
 
     return requires_auth_decorator
 
-
-
-
 # https://dev-4ezltnbcex7uvmp5.us.auth0.com/authorize?
 # audience=ffsnd&
 # response_type=token&
 # client_id=V2cmp8AICx4yXN3pfTNnT3prnjhWWx89&
 # redirect_uri=https://localhost:8080/callback
 
-# eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IlNyN2hvNVA2Qi13UE85ajZRVEo2TiJ9.eyJpc3MiOiJodHRwczovL2Rldi00ZXpsdG5iY2V4N3V2bXA1LnVzLmF1dGgwLmNvbS8iLCJzdWIiOiJhdXRoMHw2MzY5ODAxZWNmOTFkMmE3NmU5NDM3ODIiLCJhdWQiOiJmZnNuZCIsImlhdCI6MTY2ODE5MjA3MCwiZXhwIjoxNjY4MTk5MjcwLCJhenAiOiJWMmNtcDhBSUN4NHlYTjNwZlROblQzcHJuamhXV3g4OSIsInNjb3BlIjoiIiwicGVybWlzc2lvbnMiOlsiZGVsZXRlOmRyaW5rcyIsImdldDpkcmlua3MiLCJnZXQ6ZHJpbmtzLWRldGFpbCIsInBhdGNoOmRyaW5rcyIsInBvc3Q6ZHJpbmtzIl19.DQN212NOL5yuu6_LnpnhB4lwLk-HwB0dSPU1r3SzVoRjwWAGlWGEo7eWAqfv8Z9FHe4U0GDIFmcpFUBDaQtv4IS7eMgt0BfQ0jJZJqUXTztF0e_KDooUvUXldUe3L0EX31fcU4saCrLkxJ566kxd0KmhMA-nwMkBwwFUQqLsLqrHp0czYkuir68uJWb7AMgZsgLOqj2o90iX_3UDk2YlnLHB34K9PviYvjKxIitnobkcY3Ju6QEJx6Lmu2lhn9PemPqNNx_pHQH2ObDs7U34ROXYU_s5h0D7IFWiF25YcxNAVg9sknyLKYtUaVF_tVz7RS7pclbimIeLrwYNMHdQ5w
+# eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IlNyN2hvNVA2Qi13UE85ajZRVEo2TiJ9.eyJpc3MiOiJodHRwczovL2Rldi00ZXpsdG5iY2V4N3V2bXA1LnVzLmF1dGgwLmNvbS8iLCJzdWIiOiJhdXRoMHw2MzY5ODAxZWNmOTFkMmE3NmU5NDM3ODIiLCJhdWQiOiJmZnNuZCIsImlhdCI6MTY2ODU0NDA0MiwiZXhwIjoxNjY4NjMwNDQyLCJhenAiOiJWMmNtcDhBSUN4NHlYTjNwZlROblQzcHJuamhXV3g4OSIsInNjb3BlIjoiIiwicGVybWlzc2lvbnMiOlsiZGVsZXRlOmRyaW5rcyIsImdldDpkcmlua3MiLCJnZXQ6ZHJpbmtzLWRldGFpbCIsInBhdGNoOmRyaW5rcyIsInBvc3Q6ZHJpbmtzIl19.M4iqujlRYLmCsgoJXN6Hs7V60a6R4OOT-PU_R6ysrzCNq_2uz1GaYkQzpxgKOGN0XR7O9botvUmKV4DpUTHjLtGH39zaHWVvvHa3ssouJCy0-kkgdlY73RexEYs0DHeu-AOOUcB30ZKUy_yzKuaxQyehvqzg2_IYC5001p5sl1dAGCTpC_eUarnhx0GeELovi5Yvilau_F1m2TnS90QI5_NVxgdXxjDNodH8qJdx-Trf6qOhhuXIlToEFHO-8_kOV_iGv27La-iSzOlXrXiHBGDZkGmhkX-R4F6dNsrvx0Gr6Uf_3KKBLlTPvO7QxycAotFsaADADiuCJS0tReDzfA

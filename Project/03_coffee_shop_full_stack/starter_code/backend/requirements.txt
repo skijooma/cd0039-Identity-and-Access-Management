@@ -1,29 +1,77 @@
-astroid==2.12.12
-click==8.1.3
-dill==0.3.6
-ecdsa==0.18.0
-Flask==2.2.2
-Flask-Cors==3.0.10
-Flask-SQLAlchemy==3.0.2
-future==0.18.2
-greenlet==2.0.0.post0
-isort==5.10.1
-itsdangerous==2.1.2
-Jinja2==3.1.2
-lazy-object-proxy==1.8.0
-MarkupSafe==2.1.1
-mccabe==0.7.0
-platformdirs==2.5.2
-pyasn1==0.4.8
-pycryptodome==3.3.1
-pylint==2.15.5
-python-jose==3.3.0
-python-jose-cryptodome==1.3.2
-rsa==4.9
-six==1.16.0
-SQLAlchemy==1.4.43
-tomli==2.0.1
-tomlkit==0.11.6
-typed-ast==1.5.4
-Werkzeug==2.2.2
-wrapt==1.14.1
+astroid
+autopep8
+black
+click
+colorama
+ecdsa
+Flask
+Flask-Cors
+Flask-SQLAlchemy
+future
+greenlet
+isort
+itsdangerous
+Jinja2
+lazy-object-proxy
+MarkupSafe
+mccabe
+mypy-extensions
+pathspec
+platformdirs
+pyasn1
+pycodestyle
+pylint
+python-dotenv
+python-jose
+rsa
+six
+SQLAlchemy
+toml
+tomli
+# typed-ast==1.4.2
+typing_extensions
+Werkzeug
+wrapt
+
+
+
+
+
+
+
+
+
+
+
+
+
+# astroid==2.12.12
+# click==8.1.3
+# dill==0.3.6
+# ecdsa==0.18.0
+# Flask==2.2.2
+# Flask-Cors==3.0.10
+# Flask-SQLAlchemy==3.0.2
+# future==0.18.2
+# greenlet==2.0.0.post0
+# isort==5.10.1
+# itsdangerous==2.1.2
+# Jinja2==3.1.2
+# lazy-object-proxy==1.8.0
+# MarkupSafe==2.1.1
+# mccabe==0.7.0
+# platformdirs==2.5.2
+# pyasn1==0.4.8
+# pycryptodome==3.3.1
+# pylint==2.15.5
+# python-dotenv==0.21.0
+# python-jose==3.3.0
+# python-jose-cryptodome==1.3.2
+# rsa==4.9
+# six==1.16.0
+# SQLAlchemy==1.4.43
+# tomli==2.0.1
+# tomlkit==0.11.6
+# typed-ast==1.5.4
+# Werkzeug==2.2.2
+# wrapt==1.14.1
