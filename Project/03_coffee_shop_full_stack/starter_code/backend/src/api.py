@@ -85,22 +85,22 @@ Implementation of endpoint
 @app.route('/drinks', methods=['POST'])
 @requires_auth("post:drinks")
 def post_drinks(jwt):
-    print("IN POST /drink => ")
+    print("IN POST /drink => ", request.get_json())
     drink = []
 
     title = request.get_json()['title']
     recipe = request.get_json()['recipe']
 
     try:
-        new_drink = Drink(Drink(title=title, recipe=recipe))
+        # new_drink = Drink(title=title, recipe=recipe)
 
-        # new_drink = Drink(Drink(
-        #     title='cola',
-        #     recipe='[{"name": "cola", "color": "black", "parts": 1}]'
-        # ))
+        new_drink = Drink(
+            title='coca cola',
+            recipe='[{"name": "coca cola", "color": "black", "parts": 1}]'
+        )
 
         new_drink.insert()
-        drink.append(new_drink.long)
+        drink.append(new_drink.long())
 
         return jsonify({'success': True, "drinks": drink})
     except:
@@ -127,25 +127,28 @@ Implementation of endpoint
 @app.route('/drinks/<id>', methods=['PATCH'])
 @requires_auth("patch:drinks")
 def patch_drinks(jwt, id):
-    print("PATCH /drinks => ", request.get_data())
+    print("PATCH /drinks => ", request.get_json())
     drink = []
 
-    # title = request.get_json()['title']
-    # recipe = request.get_json()['recipe']
+    title = request.get_json()['title']
+    recipe = request.get_json()['recipe']
 
-    title = 'espresso',
-    recipe = '[{"name": "espresso", "color": "black", "parts": 1}]'
+    # title = 'espresso',
+    # recipe = '[{"name": "espresso", "color": "black", "parts": 1}]'
 
     try:
         updated_drink = db.session.query(Drink).filter(Drink.id == id).first()
+
         if updated_drink is None:
             abort(404)
 
-        updated_drink.title = title
-        updated_drink.recipe = recipe
+        updated_drink = updated_drink.long()
+
+        updated_drink['title'] = title
+        updated_drink['recipe'] = recipe
 
         updated_drink.update()
-        drink.append(updated_drink.long())
+        drink.append(updated_drink)
 
         return jsonify({'success': True, "drinks": drink})
     except:
