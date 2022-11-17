@@ -8,6 +8,23 @@
 	"item": [
 		{
 			"name": "GET /drinks",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Request completes with a successful code\", function () {",
+							"    pm.response.to.have.status(200);",
+							"})",
+							"",
+							"pm.test(\"Response body contains text drinks\", function () {",
+							"    pm.expect(pm.response.text()).to.include(\"drinks\");",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
 			"request": {
 				"method": "GET",
 				"header": [],
@@ -30,6 +47,34 @@
 		},
 		{
 			"name": "GET /drinks-detail",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Request completes with a successful code\", function () {",
+							"    pm.response.to.have.status(200);",
+							"})",
+							"",
+							"pm.test(\"Response body contains high-level property drinks\", function () {",
+							"    pm.expect(pm.response.text()).to.include(\"drinks\");",
+							"});",
+							"",
+							"pm.test(\"Response body is valid JSON\", function () {",
+							"     pm.response.to.be.json;",
+							"});",
+							"",
+							"pm.test(\"Response returns with 2 drinks\", () => {",
+							"    const responseJson = pm.response.json();",
+							"    pm.expect(responseJson.drinks).to.have.lengthOf(2);",
+							"});",
+							"",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
 			"request": {
 				"method": "GET",
 				"header": [],
@@ -45,6 +90,86 @@
 					"port": "5000",
 					"path": [
 						"drinks-detail"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "POST /drinks",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "http://127.0.0.1:5000/drinks",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "5000",
+					"path": [
+						"drinks"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "PATCH /drinks",
+			"request": {
+				"method": "PATCH",
+				"header": [],
+				"url": {
+					"raw": "http://127.0.0.1:5000/drinks/?id=1",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "5000",
+					"path": [
+						"drinks",
+						""
+					],
+					"query": [
+						{
+							"key": "id",
+							"value": "1"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "DELETE /drinks",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "http://127.0.0.1:5000/drinks/?id=1",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "5000",
+					"path": [
+						"drinks",
+						""
+					],
+					"query": [
+						{
+							"key": "id",
+							"value": "1"
+						}
 					]
 				}
 			},
