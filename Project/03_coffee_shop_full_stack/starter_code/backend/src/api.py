@@ -17,8 +17,8 @@ Uncommenting the following lines initializes the database
 !! Running this function will add two
 '''
 
-with app.app_context():
-    db_drop_and_create_all()
+# with app.app_context():
+#     db_drop_and_create_all()
 
 
 # ROUTES
